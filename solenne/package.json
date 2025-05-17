@@ -23,8 +23,11 @@
     "react-countup": "^6.5.3",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.3",
+    "react-tsparticles": "^2.12.2",
     "recharts": "^2.15.3",
+    "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
+    "tsparticles": "^3.8.1",
     "zod": "^3.24.4"
   },
   "devDependencies": {
