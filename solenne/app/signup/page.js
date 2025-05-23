@@ -19,27 +19,42 @@ export default function SignupPage() {
   });
   const [loading, setLoading] = useState(false);
 
+  // Inside your signup submit handler, after a successful signup
+localStorage.setItem('userName', formData.name);
+
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    
+
     if (formData.password !== formData.confirm) {
       toast.error('Passwords do not match');
       return;
     }
+
     setLoading(true);
+
     try {
-      const res = await fetch('/api/signup', {
+      const res = await fetch('http://localhost:5000/api/signup', {  // <-- full URL here
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
+
       const data = await res.json();
+
       if (res.ok) {
         toast.success('Account created! Redirecting...');
-        setTimeout(() => router.push('/onboarding'), 1500);
+        setTimeout(() => router.push('/login'), 1500); // redirect after success
       } else {
         toast.error(data.message || 'Signup failed');
       }
@@ -107,25 +122,7 @@ export default function SignupPage() {
               </motion.div>
             </form>
 
-            <div className="mt-6 text-center text-sm text-white">Or sign up with</div>
-            <div className="mt-3 flex justify-center gap-4">
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="border p-2 rounded-lg hover:bg-white/10">
-                <Github className="w-5 h-5 text-white" />
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="border p-2 rounded-lg hover:bg-white/10">
-                <img src="/gram.jpg" alt="Google" className="w-5 h-5" />
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="border p-2 rounded-lg hover:bg-white/10">
-                <img src="/ig.jpg" alt="Instagra " className="w-5 h-5" />
-              </motion.button>
-            </div>
-
-            <p className="text-center text-sm mt-6 text-white">
-              Already have an account?{' '}
-              <a href="/login" className="text-indigo-300 hover:underline">
-                Log in
-              </a>
-            </p>
+            {/* ... social buttons and login link ... */}
           </CardContent>
         </Card>
       </motion.div>

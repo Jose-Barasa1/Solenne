@@ -1,6 +1,7 @@
-'use client'
+'use client';
+
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/router";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, RadialBarChart, RadialBar, PieChart, Pie, Cell
 } from "recharts";
@@ -9,47 +10,35 @@ import {
   Users, DollarSign, Activity, ShoppingCart, TrendingUp, PieChart as PieIcon, LayoutDashboard, Settings, LogOut
 } from "lucide-react";
 import CountUp from "react-countup";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const revenueData = [
-  { name: "Mon", revenue: 4000 }, { name: "Tue", revenue: 3000 }, { name: "Wed", revenue: 5000 },
-  { name: "Thu", revenue: 7000 }, { name: "Fri", revenue: 6000 }, { name: "Sat", revenue: 8000 },
-  { name: "Sun", revenue: 7500 }
-];
-
-const sessionsData = [
-  { name: "Jan", sessions: 1200 }, { name: "Feb", sessions: 2100 }, { name: "Mar", sessions: 800 },
-  { name: "Apr", sessions: 1600 }, { name: "May", sessions: 2200 }, { name: "Jun", sessions: 1900 },
-  { name: "Jul", sessions: 2300 }, { name: "Aug", sessions: 1800 }, { name: "Sep", sessions: 2400 },
-  { name: "Oct", sessions: 1700 }, { name: "Nov", sessions: 2600 }, { name: "Dec", sessions: 2900 }
-];
-
-const userTypes = [
-  { name: "Admins", value: 15, color: "#0ea5e9" },
-  { name: "Editors", value: 25, color: "#34d399" },
-  { name: "Viewers", value: 60, color: "#fbbf24" }
-];
-
-const metrics = [
-  {
-    title: "Revenue", icon: <DollarSign className="text-emerald-600" />, value: 45678.9, change: "+20%", fill: "#10b981", score: 85
-  },
-  {
-    title: "Users", icon: <Users className="text-sky-600" />, value: 2405, change: "+33%", fill: "#3b82f6", score: 76
-  },
-  {
-    title: "Sessions", icon: <Activity className="text-violet-600" />, value: 10353, change: "+8%", fill: "#8b5cf6", score: 67
-  },
-  {
-    title: "Orders", icon: <ShoppingCart className="text-rose-600" />, value: 843, change: "+12%", fill: "#ec4899", score: 72
-  },
-  {
-    title: "Conversions", icon: <TrendingUp className="text-amber-500" />, value: 17.4, change: "+5.5%", fill: "#facc15", score: 90
-  }
-];
-
-export default function EnhancedDashboard() {
+export default function ShopDashboard() {
+  const router = useRouter();
+  const { id } = router.query;
+  const [shopData, setShopData] = useState(null);
   const [animated, setAnimated] = useState(false);
-  useEffect(() => setAnimated(true), []);
+
+  useEffect(() => {
+    if (id) {
+      fetch(`http://localhost:5000/shops/${id}/dashboard`) // update if your Flask URL is different
+        .then(res => res.json())
+        .then(data => {
+          setShopData(data);
+          setAnimated(true);
+        })
+        .catch(err => console.error("Error loading dashboard:", err));
+    }
+  }, [id]);
+
+  if (!shopData) return <div className="p-6">Loading shop dashboard...</div>;
+
+  const metrics = [
+    { title: "Revenue", icon: <DollarSign className="text-emerald-600" />, value: shopData.revenue, change: "+20%", fill: "#10b981", score: 85 },
+    { title: "Users", icon: <Users className="text-sky-600" />, value: shopData.users, change: "+33%", fill: "#3b82f6", score: 76 },
+    { title: "Sessions", icon: <Activity className="text-violet-600" />, value: shopData.sessions, change: "+8%", fill: "#8b5cf6", score: 67 },
+    { title: "Orders", icon: <ShoppingCart className="text-rose-600" />, value: shopData.orders, change: "+12%", fill: "#ec4899", score: 72 },
+    { title: "Conversions", icon: <TrendingUp className="text-amber-500" />, value: shopData.conversions, change: "+5.5%", fill: "#facc15", score: 90 }
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -121,7 +110,7 @@ export default function EnhancedDashboard() {
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData}>
+              <LineChart data={shopData.revenueData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="name" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
@@ -138,7 +127,7 @@ export default function EnhancedDashboard() {
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={sessionsData}>
+              <BarChart data={shopData.sessionsData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="name" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
@@ -159,14 +148,14 @@ export default function EnhancedDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={userTypes}
+                  data={shopData.userTypes}
                   dataKey="value"
                   nameKey="name"
                   outerRadius={90}
                   fill="#8884d8"
                   label
                 >
-                  {userTypes.map((entry, index) => (
+                  {shopData.userTypes.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
