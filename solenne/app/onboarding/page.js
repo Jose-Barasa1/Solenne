@@ -62,7 +62,7 @@ export default function OnboardingPage() {
   function enterGallery() {
     if (selectedShop) {
       toast.success(`Entering ${selectedShop.name}'s gallery...`);
-      router.push(`/shops/${selectedShop.id}`);
+      router.push("/dashboard");
     } else {
       toast.error("Please select a shop to enter.");
     }
