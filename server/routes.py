@@ -24,6 +24,8 @@ def signup():
 
     return jsonify({"message": "User created successfully"}), 201
 
+
+
 # ----- EXISTING LOGIN -----
 @auth_bp.route('/login', methods=['POST'])
 def login():

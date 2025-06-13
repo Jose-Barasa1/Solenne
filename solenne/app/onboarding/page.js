@@ -79,7 +79,7 @@ export default function OnboardingPage() {
       >
         <div className="px-6 py-5 flex justify-between items-center border-b border-fuchsia-700">
           <h2 className="text-2xl font-bold text-fuchsia-300 tracking-wide select-none">
-            Solenne Hub
+            Solenne 
           </h2>
           <button
             aria-label="Toggle Sidebar"
@@ -357,64 +357,7 @@ export default function OnboardingPage() {
           )}
         </AnimatePresence>
       </main>
-{/* Profile Modal */}
-<AnimatePresence>
-        {profileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-60 bg-black bg-opacity-70 flex items-center justify-center p-5"
-            aria-modal="true"
-            role="dialog"
-            aria-labelledby="profile-modal-title"
-          >
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-              transition={{ type: "spring", stiffness: 100, damping: 15 }}
-              className="bg-gradient-to-tr from-purple-900 to-fuchsia-900 rounded-3xl shadow-xl max-w-md w-full p-8 relative"
-            >
-              <button
-                onClick={() => setProfileOpen(false)}
-                className="absolute top-4 right-4 text-purple-300 hover:text-fuchsia-400 transition-colors"
-                aria-label="Close Profile"
-              >
-                <X size={24} />
-              </button>
-              <div className="flex flex-col items-center gap-4 text-center text-white">
-                <img
-                  src="/user-profile.jpg"
-                  alt="User profile"
-                  className="w-24 h-24 rounded-full ring-4 ring-fuchsia-500 shadow-lg"
-                  loading="lazy"
-                />
-                <h3
-                  id="profile-modal-title"
-                  className="text-3xl font-extrabold tracking-wide"
-                >
-                  Jose Solenne
-                </h3>
-                <p className="text-purple-300 text-sm italic">
-                  Art & Jewelry Enthusiast
-                </p>
-                <p className="mt-4 text-purple-200 max-w-sm leading-relaxed">
-                  Welcome to your profile hub! Here you can update your preferences,
-                  explore new collections, and stay connected to the Solenne community.
-                </p>
-                <button
-                  onClick={() => alert("Edit Profile clicked")}
-                  className="mt-6 px-8 py-3 rounded-full bg-fuchsia-600 hover:bg-fuchsia-700 font-semibold shadow-lg transition-all duration-300"
-                >
-                  Edit Profile
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+</div>
      
     
   );
