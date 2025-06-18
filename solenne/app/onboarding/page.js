@@ -1,47 +1,31 @@
-'use client'
+'use client';
+
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // Next.js 13+ app router redirect
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Tilt from "react-parallax-tilt";
 import {
   Sparkles,
   Paintbrush,
-  Volume2,
-  VolumeX,
-  Star,
-  Info,
-  UserCircle2,
-  LogOut,
-  User,
-  X,
-  Menu,
-  Repeat,
 } from "lucide-react";
 import { toast } from 'sonner';
+import Sidebar from "@/components/Sidebar"; 
 
 export default function OnboardingPage() {
   const router = useRouter();
 
   const [shops, setShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState(null);
-  const [muted, setMuted] = useState(true);
   const [hoveredShop, setHoveredShop] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [profileOpen, setProfileOpen] = useState(false);
 
-  // Fetch shops from backend API on mount
   useEffect(() => {
     fetch('http://localhost:5000/api/shops')
       .then(res => res.json())
-      .then(data => {
-        console.log('Shops fetched:', data);
-        setShops(data);
-      })
+      .then(data => setShops(data))
       .catch(console.error);
   }, []);
-  
+
   useEffect(() => {
-    // Subtle sparkling stars background
     const stars = document.createElement("div");
     stars.className =
       "pointer-events-none fixed inset-0 z-0 bg-[url('/sparkle.svg')] bg-cover opacity-10 animate-pulse";
@@ -50,7 +34,6 @@ export default function OnboardingPage() {
   }, []);
 
   useEffect(() => {
-    // Trail effect script (optional)
     const script = document.createElement("script");
     script.src = "/trail.js";
     script.async = true;
@@ -58,7 +41,6 @@ export default function OnboardingPage() {
     return () => document.body.removeChild(script);
   }, []);
 
-  // Redirect to shop gallery page on button click
   function enterGallery() {
     if (selectedShop) {
       toast.success(`Entering ${selectedShop.name}'s gallery...`);
@@ -70,181 +52,9 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#0f001a] via-[#1a002b] to-[#2b0044] text-white overflow-hidden relative font-sans">
-     {/* Sidebar */}
-     <motion.aside
-        initial={{ x: sidebarOpen ? 0 : -280 }}
-        animate={{ x: sidebarOpen ? 0 : -280 }}
-        transition={{ type: "spring", stiffness: 80, damping: 15 }}
-        className="fixed left-0 top-0 bottom-0 w-72 bg-gradient-to-b from-purple-900/90 to-fuchsia-900/80 backdrop-blur-lg border-r border-fuchsia-700 shadow-xl z-40 flex flex-col"
-      >
-        <div className="px-6 py-5 flex justify-between items-center border-b border-fuchsia-700">
-          <h2 className="text-2xl font-bold text-fuchsia-300 tracking-wide select-none">
-            Solenne 
-          </h2>
-          <button
-            aria-label="Toggle Sidebar"
-            onClick={() => setSidebarOpen(false)}
-            className="text-fuchsia-400 hover:text-fuchsia-200 transition-colors"
-          >
-            <X size={22} />
-          </button>
-        </div>
-        <nav className="flex-1 px-6 py-6 overflow-y-auto space-y-6">
-          {/* Section 1 */}
-          <div>
-            <h3 className="uppercase text-xs font-semibold text-purple-400 mb-3 tracking-widest">
-              Explore
-            </h3>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center gap-3 text-purple-200 hover:text-fuchsia-300 transition-colors rounded-md px-3 py-2 cursor-pointer"
-                >
-                  <Sparkles size={20} className="text-fuchsia-400" />
-                  <span>Jewelry Collections</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center gap-3 text-purple-200 hover:text-fuchsia-300 transition-colors rounded-md px-3 py-2 cursor-pointer"
-                >
-                  <Paintbrush size={20} className="text-indigo-400" />
-                  <span>Art Galleries</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center gap-3 text-purple-200 hover:text-fuchsia-300 transition-colors rounded-md px-3 py-2 cursor-pointer"
-                >
-                  <Star size={20} className="text-yellow-400" />
-                  <span>Featured Artists</span>
-                </a>
-              </li>
-            </ul>
-          </div>
+      <Sidebar />
 
-          {/* Section 2 */}
-          <div>
-            <h3 className="uppercase text-xs font-semibold text-purple-400 mb-3 tracking-widest">
-              Resources
-            </h3>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center gap-3 text-purple-200 hover:text-fuchsia-300 transition-colors rounded-md px-3 py-2 cursor-pointer"
-                >
-                  <Info size={20} className="text-cyan-400" />
-                  <span>How it Works</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center gap-3 text-purple-200 hover:text-fuchsia-300 transition-colors rounded-md px-3 py-2 cursor-pointer"
-                >
-                  <User size={20} className="text-green-400" />
-                  <span>Community</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center gap-3 text-purple-200 hover:text-fuchsia-300 transition-colors rounded-md px-3 py-2 cursor-pointer"
-                >
-                  <Paintbrush size={20} className="text-pink-400" />
-                  <span>Art Tutorials</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Section 3 */}
-          <div>
-            <h3 className="uppercase text-xs font-semibold text-purple-400 mb-3 tracking-widest">
-              Settings
-            </h3>
-            <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => setProfileOpen(true)}
-                  className="flex items-center gap-3 text-purple-200 hover:text-fuchsia-300 transition-colors rounded-md px-3 py-2 w-full cursor-pointer"
-                >
-                  <UserCircle2 size={20} className="text-fuchsia-500" />
-                  <span>View Profile</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => alert("Switch account clicked")}
-                  className="flex items-center gap-3 text-purple-200 hover:text-fuchsia-300 transition-colors rounded-md px-3 py-2 w-full cursor-pointer"
-                >
-                  <Repeat size={20} className="text-indigo-400" />
-                  <span>Switch Account</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => alert("Logout clicked")}
-                  className="flex items-center gap-3 text-purple-200 hover:text-fuchsia-300 transition-colors rounded-md px-3 py-2 w-full cursor-pointer"
-                >
-                  <LogOut size={20} className="text-red-500" />
-                  <span>Logout</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-        </nav>
-
-        <div className="px-6 py-4 border-t border-fuchsia-700 flex items-center gap-3">
-          <img
-            src="/user-profile.jpg"
-            alt="User profile"
-            className="w-12 h-12 rounded-full ring-2 ring-fuchsia-500 shadow-md"
-          />
-          <div>
-            <p className="text-white font-semibold">Jose Solenne</p>
-            <p className="text-purple-300 text-xs">Art & Jewelry Enthusiast</p>
-          </div>
-        </div>
-      </motion.aside>
-
-      {/* Sidebar toggle for mobile/sm screens */}
-      {!sidebarOpen && (
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="fixed top-6 left-6 z-50 bg-fuchsia-600 hover:bg-fuchsia-700 text-white p-3 rounded-full shadow-lg shadow-fuchsia-700/50 transition-all duration-300"
-          aria-label="Open Sidebar"
-        >
-          <Menu size={24} />
-        </button>
-      )}
-
-      {/* Main Content */}
       <main className="flex-1 ml-0 sm:ml-72 p-8 relative z-10 overflow-y-auto min-h-screen">
-        {/* Music Control */}
-        <div className="fixed top-6 right-6 z-40 bg-purple-800/60 backdrop-blur-md p-4 rounded-3xl shadow-lg border border-purple-600 flex items-center gap-4 text-white select-none">
-          <div className="flex items-center gap-3">
-            <Star className="w-7 h-7 text-fuchsia-400 animate-pulse" />
-            <p className="font-semibold tracking-wide">Jose's Music</p>
-          </div>
-          <button
-            onClick={() => setMuted(!muted)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 transition-all duration-300 shadow-lg hover:shadow-fuchsia-500/50"
-            aria-label="Toggle Mute"
-          >
-            {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-            <span className="select-none">{muted ? "Unmute" : "Mute"}</span>
-          </button>
-          <audio autoPlay loop muted={muted} className="hidden">
-            <source src="/ambient.mp3" type="audio/mpeg" />
-          </audio>
-        </div>
-
-        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -262,7 +72,6 @@ export default function OnboardingPage() {
           </p>
         </motion.div>
 
-        {/* Shop Cards Grid */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -294,15 +103,12 @@ export default function OnboardingPage() {
                   selectedShop?.id === shop.id ? "ring-4 ring-fuchsia-400 animate-pulse-slow" : ""
                 }`}
                 onClick={() => setSelectedShop(shop)}
-                aria-label={`Select ${shop.name} shop`}
               >
                 <div className="absolute -inset-1 rounded-3xl bg-gradient-to-br from-fuchsia-500/50 to-purple-700/20 blur-2xl opacity-0 group-hover:opacity-80 transition-opacity pointer-events-none" />
                 <img
                   src={shop.image}
                   alt={shop.name}
                   className="rounded-2xl w-full h-36 object-cover mb-5 shadow-lg"
-                  loading="lazy"
-                  decoding="async"
                 />
                 <div className="flex justify-center mb-3 z-10 relative">
                   {shop.type === "jewelry" ? (
@@ -327,7 +133,6 @@ export default function OnboardingPage() {
           ))}
         </motion.div>
 
-        {/* Selected Shop Bottom Bar */}
         <AnimatePresence>
           {selectedShop && (
             <motion.div
@@ -349,7 +154,6 @@ export default function OnboardingPage() {
               <button
                 onClick={enterGallery}
                 className="mt-4 sm:mt-0 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white px-8 py-3 rounded-full font-semibold shadow-xl hover:shadow-fuchsia-500/60 transition-all duration-300 animate-glow"
-                aria-label={`Enter ${selectedShop.name} gallery`}
               >
                 Enter the Gallery
               </button>
@@ -357,8 +161,6 @@ export default function OnboardingPage() {
           )}
         </AnimatePresence>
       </main>
-</div>
-     
-    
+    </div>
   );
 }

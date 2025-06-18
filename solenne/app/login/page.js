@@ -1,466 +1,279 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Eye,
-  EyeOff,
-  Mail,
-  Lock,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import Particles from "react-tsparticles";
-import { loadFull } from "tsparticles";
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, Eye, EyeOff, CheckCircle, UserCheck } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { FaGoogle, FaGithub, FaFacebook } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
-const loginSchema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  rememberMe: z.boolean().optional(),
-});
+export default function OnboardingLoginPage() {
+  const [currentFact, setCurrentFact] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginComplete, setLoginComplete] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [blinkerVisible, setBlinkerVisible] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
+  
 
-const typingSoundsUrl =
-  "https://actions.google.com/sounds/v1/foley/typewriter_key_press.ogg";
-const clickSoundUrl = "https://actions.google.com/sounds/v1/ui/click.ogg";
-const backgroundMusicUrl =
-  "https://cdn.pixabay.com/download/audio/2022/03/22/audio_3c94bc14bb.mp3?filename=chill-hip-hop-rap-11535.mp3";
-
-export default function CombinedLoginPage() {
   const router = useRouter();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
-  const [typingText, setTypingText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const facts = [
+    "Crystal clarity inspires timeless beauty.",
+    "Art transcends value—Solenne captures both.",
+    "Each Solenne piece tells a story.",
+    "Luxury lives where passion meets craft.",
+    "Beauty is eternal when shared through art."
+  ];
 
-  const [message, setMessage] = useState(null); // { type: "success"|"error", text: string }
-
-  const audioRef = useRef(null);
-  const typingAudioRef = useRef(null);
-  const clickAudioRef = useRef(null);
-
-  const form = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-    },
-  });
-
-  const [userName, setUserName] = useState('');
+  const strengthMessages = [
+    "Too delicate, like raw clay.",
+    "Sculpting strength with subtle detail.",
+    "Gleaming with elegance—nearly there.",
+    "A masterpiece of protection and grace."
+  ];
 
   useEffect(() => {
-    const savedName = localStorage.getItem('userName');
-    if (savedName) {
-      setUserName(savedName);
-    }
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) setEmail(savedEmail);
   }, []);
-  
 
   useEffect(() => {
-    if (!userName) return;
-  
-    const phrase = `${userName} is signing in...`;
-    let idx = 0;
-  
-    setTypingText("");
-    setIsTyping(true);
-  
-    const intervalId = setInterval(() => {
-      if (idx < phrase.length) {
-        setTypingText((prev) => prev + phrase[idx]);
-        idx++;
-        if (typingAudioRef.current && !isMuted) {
-          typingAudioRef.current.currentTime = 0;
-          typingAudioRef.current.play();
-        }
-      } else {
-        clearInterval(intervalId);
-        setIsTyping(false);
-      }
-    }, 120);
-  
-    return () => clearInterval(intervalId);
-  }, [userName, isMuted]);
-  
+    const factInterval = setInterval(() => {
+      setCurrentFact(i => (i + 1) % facts.length);
+    }, 8000);
+    return () => clearInterval(factInterval);
+  }, []);
 
+  useEffect(() => {
+    const strength = password.length >= 12 ? 100 : password.length >= 8 ? 70 : password.length >= 5 ? 40 : password.length > 0 ? 20 : 0;
+    setPasswordStrength(strength);
+  }, [password]);
 
-  const onSubmit = async (values) => {
-    if (clickAudioRef.current && !isMuted) {
-      clickAudioRef.current.play();
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinkerVisible(v => !v);
+    }, 600);
+    return () => clearInterval(blinkInterval);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleLogin = async () => {
+    if (rememberMe) {
+      localStorage.setItem('rememberedEmail', email);
+    } else {
+      localStorage.removeItem('rememberedEmail');
     }
-
-    setMessage(null); // Clear previous message
+    setIsLoggingIn(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-          rememberMe: values.rememberMe,
-        }),
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Login failed");
-      }
 
       const data = await res.json();
 
-      // Save token/session here if needed
-      // For example: localStorage.setItem("token", data.token);
-
-      setMessage({ type: "success", text: `Welcome back, ${values.email}! Redirecting...` });
-
-      // Redirect after a small delay so user sees the message
-      setTimeout(() => {
-        router.push("/onboarding");
-      }, 1800);
-    } catch (error) {
-      setMessage({ type: "error", text: error.message });
+      if (res.ok) {
+        toast.success('Login successful!');
+        setLoginComplete(true);
+        setTimeout(() => {
+          
+          setTimeout(() => router.push('/onboarding'), 1000);
+        }, 1000);
+      }
+      
+      
+    } catch (err) {
+      toast.error('Login failed. Please try again.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
-  const calculatePasswordStrength = (password) => {
-    let strength = 0;
-
-    if (password.length >= 6) strength += 1;
-    if (/[A-Z]/.test(password)) strength += 1;
-    if (/\d/.test(password)) strength += 1;
-    if (/[!@#$%^&*(),.?":{}|<>\-_=+]/.test(password)) strength += 1;
-
-    return strength;
-  };
-
-  const particlesInit = async (main) => {
-    await loadFull(main);
-  };
-
-  const toggleMute = () => {
-    setIsMuted((prev) => {
-      const newMute = !prev;
-      if (audioRef.current) {
-        audioRef.current.muted = newMute;
-        if (!newMute) audioRef.current.play().catch(() => {});
-        else audioRef.current.pause();
-      }
-      return newMute;
-    });
-  };
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = 0.2;
-      audioRef.current.loop = true;
-      audioRef.current.muted = isMuted;
-      if (!isMuted) {
-        audioRef.current.play().catch(() => {});
-      }
-    }
-  }, [isMuted]);
-
-  const LiveClock = () => {
-    const [time, setTime] = useState(new Date());
-    useEffect(() => {
-      const timer = setInterval(() => setTime(new Date()), 1000);
-      return () => clearInterval(timer);
-    }, []);
-    return (
-      <>
-        <div>{time.toLocaleDateString()}</div>
-        <div>{time.toLocaleTimeString()}</div>
-      </>
-    );
-  };
+ 
   
-  const getMotivationalQuote = () => {
-    const quotes = [
-      "Music is the soundtrack of your life.",
-      "Keep pushing forward, greatness awaits!",
-      "Let the beats move your soul.",
-      "Creativity takes courage.",
-      "Stay focused, stay inspired.",
-    ];
-    return quotes[Math.floor(Math.random() * quotes.length)];
-  };
-
-  const handleTypingSound = () => {
-    if (typingAudioRef.current && !isMuted) {
-      typingAudioRef.current.currentTime = 0;
-      typingAudioRef.current.play();
-    }
-  };
+  
+  
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white flex">
-      <div className="relative flex-1 flex flex-col justify-center items-center p-8 overflow-hidden bg-gradient-to-tr from-purple-900 via-indigo-900 to-black rounded-l-3xl shadow-2xl">
-  <Particles
-    id="tsparticles"
-    init={particlesInit}
-    options={{
-      background: { color: "transparent" },
-      fpsLimit: 60,
-      interactivity: {
-        events: {
-          onClick: { enable: true, mode: "push" },
-          onHover: { enable: true, mode: "repulse" },
-        },
-        modes: { push: { quantity: 4 }, repulse: { distance: 100, duration: 0.4 } },
-      },
-      particles: {
-        color: { value: "#a78bfa" },
-        links: {
-          color: "#a78bfa",
-          distance: 150,
-          enable: true,
-          opacity: 0.3,
-          width: 1,
-        },
-        collisions: { enable: true },
-        move: { enable: true, speed: 1.5, outModes: { default: "bounce" } },
-        number: { density: { enable: true, area: 900 }, value: 70 },
-        opacity: { value: 0.4 },
-        shape: { type: "circle" },
-        size: { value: { min: 1, max: 4 } },
-      },
-      detectRetina: true,
-    }}
-    className="absolute inset-0 z-0"
-  />
+    <div className="min-h-screen w-full bg-gradient-to-br from-purple-950 via-black to-fuchsia-900 text-white flex items-center justify-center overflow-hidden">
+      <div className="flex w-full h-[95vh] max-w-[1700px] rounded-3xl overflow-hidden shadow-[0_0_60px_#a855f7aa] border border-purple-800/30 backdrop-blur-xl">
 
-  <div className="relative z-10 flex flex-col items-center gap-6 p-6 bg-black/40 backdrop-blur-md rounded-2xl shadow-lg border border-purple-700 max-w-sm w-full select-none">
-    {/* Music Player Info */}
-    <div className="flex items-center gap-4 w-full">
-      <img
-        src="https://picsum.photos/seed/music/64/64"
-        alt="Album Art"
-        className="w-16 h-16 rounded-xl shadow-lg object-cover"
-        draggable={false}
-      />
-      <div className="flex flex-col flex-1">
-        <h3 className="text-white text-xl font-semibold truncate">Electric Dreams</h3>
-        <p className="text-indigo-300 text-sm truncate">Synthwave Artist</p>
-        <div className="mt-2 w-full h-2 rounded-full bg-indigo-700 overflow-hidden shadow-inner">
-          <div className="h-full bg-purple-400 animate-[progress_10s_linear_infinite]" />
-        </div>
-      </div>
-    </div>
+        {/* Left visual side */}
+        <div className="w-1/2 hidden md:flex flex-col items-center justify-center relative bg-gradient-to-b from-purple-900/80 via-black/50 to-fuchsia-950/90 p-10 gap-6">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-fuchsia-800/20 via-purple-800/10 to-transparent animate-pulse" />
 
-    {/* Music Controls */}
-    <button
-      onClick={toggleMute}
-      className="flex items-center gap-3 px-6 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md transition select-none"
-      aria-label={isMuted ? "Unmute music" : "Mute music"}
-      type="button"
-    >
-      {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
-      <span className="text-lg font-semibold">{isMuted ? "Unmute" : "Mute"}</span>
-    </button>
+          <motion.div
+            initial={{ opacity: 0, y: -40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            className="z-10 text-center"
+          >
+            <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-purple-600 mb-4 drop-shadow-xl">
+              Solenne
+            </h1>
+            <p className="text-purple-200 text-lg max-w-md mx-auto">
+              {facts[currentFact]}
+            </p>
+          </motion.div>
 
-    {/* Date & Time */}
-    <div className="mt-6 p-3 rounded-lg bg-indigo-900/40 border border-indigo-700 shadow-inner font-mono text-center text-xl text-white w-full select-none">
-      <LiveClock />
-    </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            className="w-full max-w-sm text-center text-sm text-fuchsia-300 italic z-10"
+          >
+            “Where crystals breathe elegance, and every curve is intentional.”
+          </motion.div>
 
-    {/* Motivational Quote */}
-    <blockquote className="mt-6 italic text-indigo-300 text-center px-3 select-text">
-      {getMotivationalQuote()}
-    </blockquote>
-
-    {/* Stats Cards */}
-    <div className="grid grid-cols-2 gap-4 w-full mt-6">
-      {[
-        { title: "Active Users", value: "1,254", icon: "👥" },
-        { title: "Songs Played", value: "12,872", icon: "🎵" },
-        { title: "Hours Listened", value: "534h", icon: "⏰" },
-        { title: "Playlists Created", value: "318", icon: "📂" },
-      ].map(({ title, value, icon }) => (
-        <div
-          key={title}
-          className="bg-purple-800/70 rounded-xl p-4 flex items-center gap-3 shadow-md border border-purple-700 hover:scale-105 transition-transform cursor-default select-none"
-        >
-          <span className="text-3xl">{icon}</span>
-          <div>
-            <p className="text-sm text-indigo-300">{title}</p>
-            <p className="text-xl font-bold text-white">{value}</p>
+          <div className="absolute bottom-6 left-6 text-xs text-purple-500/40">
+            Solenne 2025 ©
           </div>
         </div>
-      ))}
-    </div>
 
-    <audio ref={audioRef} src={backgroundMusicUrl} preload="auto" loop />
-  </div>
-</div>
-
-
-      {/* Right side: Form */}
-      <div className="relative flex-1 flex items-center justify-center p-8 z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="w-full max-w-md bg-black/30 border border-gray-700/60 backdrop-blur-xl p-10 rounded-3xl shadow-2xl space-y-8"
-        >
-          <div className="text-center">
-            <h1 className="text-5xl font-extrabold mb-1 tracking-wide">Welcome Back</h1>
-            <p className="text-indigo-300 italic min-h-[1.5rem] select-none">
-              {typingText}
-              <span className="blinking-cursor">|</span>
-            </p>
-            <p className="text-gray-400 mt-2">
-              Sign in to access your dashboard, orders, and personalized content.
-            </p>
+        {/* Right side - login */}
+        <div className="w-full md:w-1/2 p-14 flex items-center justify-center bg-gradient-to-br from-zinc-900 via-purple-950 to-black rounded-l-3xl relative overflow-hidden">
+          <div className="absolute top-6 left-6 z-10 text-purple-300 text-3xl font-bold select-none pointer-events-none">
+            S
           </div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label className="block mb-1 text-gray-300 font-semibold">Email</label>
-              <div className="relative">
-                <Mail
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <Input
-                  type="email"
-                  {...form.register("email")}
-                  placeholder="you@example.com"
-                  onChange={(e) => {
-                    form.setValue("email", e.target.value);
-                    handleTypingSound();
-                  }}
-                  className="pl-10 bg-white/10 border border-gray-500 focus:border-indigo-500 text-white transition"
-                  autoComplete="email"
-                />
-              </div>
-              {form.formState.errors.email && (
-                <p className="text-red-400 mt-1">{form.formState.errors.email.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block mb-1 text-gray-300 font-semibold">Password</label>
-              <div className="relative">
-                <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  {...form.register("password", {
-                    onChange: (e) => {
-                      form.setValue("password", e.target.value);
-                      setPasswordStrength(evaluateStrength(e.target.value));
-                      handleTypingSound();
-                    },
-                  })}
-                  placeholder="Enter your password"
-                  className="pl-10 bg-white/10 border border-gray-500 focus:border-indigo-500 text-white transition"
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-400 transition"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  tabIndex={-1}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-              {form.formState.errors.password && (
-                <p className="text-red-400 mt-1">{form.formState.errors.password.message}</p>
-              )}
-
-              <div className="mt-2 h-2 w-full rounded-full bg-gray-700 overflow-hidden">
-                <div
-                  style={{ width: `${(passwordStrength / 4) * 100}%` }}
-                  className={`h-full transition-all duration-300 ${
-                    passwordStrength <= 1
-                      ? "bg-red-500"
-                      : passwordStrength === 2
-                      ? "bg-yellow-400"
-                      : passwordStrength === 3
-                      ? "bg-indigo-400"
-                      : "bg-green-400"
-                  }`}
-                />
-              </div>
-              <p className="text-sm mt-1 text-gray-300 select-none">
-                Password strength:{" "}
-                {["Very Weak", "Weak", "Fair", "Strong", "Very Strong"][passwordStrength]}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            className="w-full max-w-xl space-y-8 relative z-10"
+          >
+            <div className="text-center mb-4">
+              <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-500 drop-shadow-md z-10">
+                Login to Solenne
+              </h2>
+              <p className="text-sm text-white/60 tracking-wide">
+                Your gateway to luxury creations
+              </p>
+              <p className="text-xs text-fuchsia-200 mt-2 italic animate-pulse">
+                {facts[currentFact]}
               </p>
             </div>
 
-           {/* Remember Me toggle */}
-<div className="flex items-center space-x-3 select-none">
-  <label htmlFor="rememberMe" className="relative inline-flex items-center cursor-pointer">
-    <input
-      type="checkbox"
-      id="rememberMe"
-      {...form.register("rememberMe")}
-      className="sr-only peer"
-    />
-    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500 rounded-full peer peer-checked:bg-indigo-600 transition-colors duration-300 relative">
-      <span
-        className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 peer-checked:translate-x-5"
-      />
-    </div>
-    <span className="ml-3 text-gray-300 font-medium hover:text-indigo-400">
-      Remember me
-    </span>
-  </label>
-</div>
+            <div className="flex gap-4 justify-center">
+              <button className="p-3 bg-zinc-800/70 rounded-xl hover:bg-zinc-700 border border-purple-600/40">
+                <FaGoogle className="text-white text-xl" />
+              </button>
+              <button className="p-3 bg-zinc-800/70 rounded-xl hover:bg-zinc-700 border border-purple-600/40">
+                <FaGithub className="text-white text-xl" />
+              </button>
+              <button className="p-3 bg-zinc-800/70 rounded-xl hover:bg-zinc-700 border border-purple-600/40">
+                <FaFacebook className="text-white text-xl" />
+              </button>
+            </div>
 
+            <div className="text-center text-sm text-purple-300/80">
+              {email && (
+                <span className="flex justify-center items-center gap-2">
+                  <UserCheck size={16} className="text-green-400 animate-pulse" />
+                  Signing in as <strong>{email}</strong>
+                  <span className={`ml-1 font-bold text-fuchsia-400 ${blinkerVisible ? 'opacity-100' : 'opacity-0'}`}>
+                    |
+                  </span>
+                </span>
+              )}
+            </div>
 
-            <Button
-              type="submit"
-              className="w-full py-3 font-semibold text-lg bg-indigo-600 hover:bg-indigo-700 transition rounded-xl shadow-lg"
-              disabled={form.formState.isSubmitting}
-            >
-              {form.formState.isSubmitting ? "Signing In..." : "Sign In"}
-            </Button>
-          </form>
+            <div className="space-y-5">
+              <div className={`flex items-center bg-zinc-800/70 rounded-xl px-5 py-4 border ${email ? 'border-green-500/40' : 'border-purple-700/30'} shadow-inner`}>
+                <Mail className="h-5 w-5 text-purple-400 mr-3" />
+                <Input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="bg-transparent text-white placeholder:text-white/50 border-none focus:ring-0 focus:outline-none"
+                />
+              </div>
 
-          <div className="text-center text-gray-400 text-sm select-none">
-            Don&apos;t have an account?{" "}
-            <a href="#" className="text-indigo-400 hover:underline">
-              Sign up
-            </a>
-          </div>
+              <div className={`flex items-center bg-zinc-800/70 rounded-xl px-5 py-4 border ${password.length >= 6 ? 'border-green-500/40' : 'border-purple-700/30'} shadow-inner relative`}>
+                <Lock className="h-5 w-5 text-purple-400 mr-3" />
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="bg-transparent text-white placeholder:text-white/50 border-none focus:ring-0 focus:outline-none pr-10"
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 text-white/40 hover:text-white transition">
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
 
-          {/* Success/Error message */}
-          <AnimatePresence>
-            {message && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className={`mt-6 text-center text-sm font-semibold ${
-                  message.type === "success" ? "text-green-400" : "text-red-400"
-                } select-none`}
-                role="alert"
+              {password && (
+                <div className="w-full h-3 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 transition-all duration-500"
+                    style={{ width: `${passwordStrength}%` }}
+                  ></div>
+                </div>
+              )}
+              {password && <p className="text-xs text-purple-200 text-center mt-1">{strengthMessages[Math.floor(passwordStrength / 30)]}</p>}
+
+              <div className="flex items-center justify-between text-sm text-white/50">
+                <button
+                  type="button"
+                  onClick={() => setRememberMe(!rememberMe)}
+                  className={`px-4 py-2 rounded-full text-xs font-medium border transition-all duration-300 ${
+                    rememberMe ? 'bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 border-purple-400 text-white shadow-lg shadow-fuchsia-600/20' : 'bg-zinc-800/60 border-zinc-700 text-purple-200 hover:bg-zinc-700'
+                  }`}
+                >
+                  {rememberMe ? '✓ Remembered' : 'Remember me'}
+                </button>
+                <span className="hover:underline cursor-pointer text-purple-400">Forgot password?</span>
+              </div>
+
+              <Button
+                onClick={handleLogin}
+                disabled={isLoggingIn || loginComplete}
+                className={`w-full py-3 font-bold rounded-xl transition-all duration-300 ${
+                  isLoggingIn
+                    ? 'bg-purple-700/60 cursor-wait'
+                    : 'bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500 hover:scale-105'
+                }`}
               >
-                {message.text}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {isLoggingIn ? 'Authenticating...' : loginComplete ? 'Welcome back!' : 'Log In'}
+              </Button>
+            </div>
 
-          <audio ref={typingAudioRef} src={typingSoundsUrl} preload="auto" />
-          <audio ref={clickAudioRef} src={clickSoundUrl} preload="auto" />
-        </motion.div>
+            <AnimatePresence>
+              {loginComplete && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-green-400 text-center flex justify-center items-center gap-2 mt-4"
+                >
+                  <CheckCircle size={20} />
+                  You’re logged in, enjoy your journey.
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <p className="text-center text-sm text-white/50">
+              Don’t have an account?{' '}
+              <a href="/signup" className="text-purple-400 hover:underline hover:text-fuchsia-400 transition-colors">
+                Sign up
+              </a>
+            </p>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
