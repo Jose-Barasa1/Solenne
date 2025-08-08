@@ -9,6 +9,12 @@ flask-cors = "*"
 flask-sqlalchemy ="*"
 flask-migrate ="*"
 flask-serializer ="*"
+flask-jwt-extended = "*"
+python-dotenv = "*"
+flask-socketio = "*"
+requests = "*"
+openrouteservice = "*"
+eventlet = "*"
 
 [dev-packages]
 

@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import create_access_token
 from models import db, User
+from datetime import timedelta
 
 auth_bp = Blueprint('auth', __name__)
 
+# SIGNUP
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json()
@@ -21,8 +24,19 @@ def signup():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"message": "User created successfully"}), 201
+    access_token = create_access_token(identity=user.id, expires_delta=timedelta(days=7))
 
+    return jsonify({
+        "message": "User created successfully",
+        "access_token": access_token,
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email
+        }
+    }), 201
+
+# LOGIN
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -34,8 +48,10 @@ def login():
 
     user = User.query.filter_by(email=email).first()
     if user and user.check_password(password):
+        access_token = create_access_token(identity=user.id, expires_delta=timedelta(days=7))
         return jsonify({
             "message": "Login successful",
+            "access_token": access_token,
             "user": {
                 "id": user.id,
                 "name": user.name,

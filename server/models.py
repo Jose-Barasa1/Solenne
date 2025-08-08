@@ -1,4 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Text
+from sqlalchemy.dialects.postgresql import JSON
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
@@ -27,10 +29,16 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     shop_id = db.Column(db.Integer, db.ForeignKey('shop.id'), nullable=False)
-    items = db.Column(db.JSON, nullable=False)
+    items = db.Column(db.JSON, nullable=False)  # list of items
     total_amount = db.Column(db.Numeric(10, 2), nullable=False)
-    status = db.Column(db.String(50), default='pending')
+    status = db.Column(db.String(50), default='pending')  # pending, processing, delivered, etc.
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+    # 🆕 Added for tracking and delivery
+    delivery_address = db.Column(db.String(255))  # customer destination
+    driver_location = db.Column(JSON, default={})  # { "lat": ..., "lng": ... }
+    # 🆕 Payment tracking
+    payment_method = db.Column(db.String(50), default='mpesa')  # or 'paypal', 'card'
+    transaction_id = db.Column(db.String(100), nullable=True)
 
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True)

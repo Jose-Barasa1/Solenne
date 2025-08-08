@@ -73,34 +73,41 @@ export default function OnboardingLoginPage() {
     } else {
       localStorage.removeItem('rememberedEmail');
     }
+  
     setIsLoggingIn(true);
-
+  
     try {
       const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await res.json();
-
+  
       if (res.ok) {
+        const token = data.access_token;
+  
+        if (token) {
+          localStorage.setItem('token', token); // Save the JWT
+        }
+  
         toast.success('Login successful!');
         setLoginComplete(true);
+  
         setTimeout(() => {
-          
-          setTimeout(() => router.push('/onboarding'), 1000);
+          router.push('/onboarding');
         }, 1000);
+      } else {
+        toast.error(data.message || 'Login failed');
       }
-      
-      
     } catch (err) {
       toast.error('Login failed. Please try again.');
     } finally {
       setIsLoggingIn(false);
     }
   };
-
+  
  
   
   

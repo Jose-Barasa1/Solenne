@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from models import db, User, Shop  # Make sure Shop is imported
-
+from flask_jwt_extended import create_access_token
 auth_bp = Blueprint('auth', __name__)
 
 # ----- EXISTING SIGNUP -----
@@ -26,7 +26,8 @@ def signup():
 
 
 
-# ----- EXISTING LOGIN -----
+# ----- EXISTING LOGIN -----from flask_jwt_extended import create_access_token
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -38,8 +39,12 @@ def login():
 
     user = User.query.filter_by(email=email).first()
     if user and user.check_password(password):
+        # ✅ Generate the token here
+        access_token = create_access_token(identity=user.id)
+
         return jsonify({
             "message": "Login successful",
+            "access_token": access_token,  # 👈 This is what the frontend uses
             "user": {
                 "id": user.id,
                 "name": user.name,
@@ -48,6 +53,7 @@ def login():
         }), 200
     else:
         return jsonify({"message": "Invalid email or password"}), 401
+
 
 # ----- NEW: Fetch all shops for onboarding -----
 @auth_bp.route('/shops', methods=['GET'])
